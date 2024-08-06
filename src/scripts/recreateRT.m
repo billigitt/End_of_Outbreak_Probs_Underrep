@@ -52,7 +52,6 @@ risk = zeros(1000, 1);
 gamma = zeros(1000, 1);
 
 for t = idxERTDeployed:1000
-
     
     gamma(t) = gamma_tMostBasic(incidenceData, SI_discrete, t);
     risk(t) = riskWithdrawERT(shape, rate, gamma(t));
