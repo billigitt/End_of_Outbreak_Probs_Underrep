@@ -12,13 +12,16 @@ close all
 %all dates to be datenum('dd-mm-2018')-737154. We will make the entire
 %incidence 1000 in length (very long).
 
+colourMat = [0 0.4470 0.7410; 0.8500 0.3250 0.0980; 0.5*0.4660 0.5*0.6740 0.5*0.1880];
+
 addpath('../functions')
 
 load('../mats/varsS4.mat', 'likelihoodOfMissedCase', 'ERTArrivalDay',...
-    'ERTWithdrawalDay', 'likelihoodVals_With_ERT') %load RT's calculations from S4
+    'ERTWithdrawalDay', 'likelihoodVals_With_ERT', 'combinedEOO') %load RT's calculations from S4
 
 load('../mats/varsS3.mat', 'likelihoodVals', 'RVals') %load RT's calculations from S3
 
+load('../mats/underrepProbabilitiesRTm0_5.mat','underrepProbabilitiesRT')
 
 tic
 
@@ -167,11 +170,13 @@ figure
 hold on
 for m = 1:numberOfMs
 
-    h(m) = plot(1:totalTime, riskAggregates(:, m));
+    h(m) = plot(idxERTDeployed:totalTime, riskAggregates(idxERTDeployed:totalTime, m), 'color', colourMat(m, :));
+    g(m) = plot(underrepProbabilitiesRT(1+m, :), '--', 'color', colourMat(m, :));
     
 end
 
-legend(h(1:numberOfMs), 'm=1', 'm=2', 'm=3', 'm=4', 'm=5')
+legend([h(1:numberOfMs) g(1:numberOfMs)], 'm=1', 'm=2', 'm=3', 'm=4',...
+    'm=5', 'm=1 (RT)', 'm=2 (RT)', 'm=3 (RT)', 'm=4 (RT)', 'm=5 (RT)')
 
 % 
 % x = linspace(0, 5, 1000);

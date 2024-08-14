@@ -17,7 +17,7 @@ clc
 clear all
 close all
 
-number_missed = 1;
+number_missed = 3;
 realisation_number = 1;
 
 number_missed
@@ -256,13 +256,13 @@ for RIt = 1:length(RVals)
 
     end
 end
-combinedEOO = zeros(ERTArrivalDay + 150,1);
+combinedEOOm0 = zeros(ERTArrivalDay + 150,1);
 for t = ERTArrivalDay:(ERTArrivalDay + 150)
     funcV = zeros(length(RVals),1);
     for i = 1:length(RVals)
         funcV(i) = EOO(t,i)*likelihoodVals(i);
     end
-    combinedEOO(t) = trapz(RVals, funcV);
+    combinedEOOm0(t) = trapz(RVals, funcV);
 end
 
 
@@ -273,7 +273,7 @@ ERTWithdrawalDay = daysact('5-apr-2018',  '24-jul-2018') + 1;
 
 figure()
 hold on
-plot([0:100], 1 - combinedEOO(ERTArrivalDay:(ERTArrivalDay + 100)))
+plot([0:100], 1 - combinedEOOm0(ERTArrivalDay:(ERTArrivalDay + 100)))
 serial_first_case = datenum('8-may-2018');
 serials = [serial_first_case:(serial_first_case+101)];
 datesHere = datestr(serials);
