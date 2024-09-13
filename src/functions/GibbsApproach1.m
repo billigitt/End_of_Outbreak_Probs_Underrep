@@ -1,4 +1,5 @@
-function probMoreCases = GibbsApproach1(C, w, rho, GibbsSamples, RpreERT, RERT, tERTDeployed, tEndCalc)
+function output = GibbsApproach1(C, w, rho, GibbsSamples, RpreERT, RERT, ...
+    tERTDeployed, tEndCalc, burnin, thinning)
 
 %Most basic approach: We assume that we know the Rt values exactly, and use
 %this to inform our inference.
@@ -16,7 +17,9 @@ T = length(I);
 
 probGibbsSample = zeros(T, GibbsSamples);
 
-Tinf = 300; %perhaps make this an input?
+Tinf = 200; %perhaps make this an input?
+
+incidenceStore = cell(tEndCalc - tERTDeployed + 1, 1);
 
 for t = tERTDeployed:tEndCalc
 
@@ -26,13 +29,17 @@ for t = tERTDeployed:tEndCalc
 
     waitbar((t-tERTDeployed)/(tEndCalc-tERTDeployed),f,sprintf("t = "+t+" (of "+tERTDeployed+" to "+tEndCalc+")"))
 
-    tmpI = I(1:t); %Always goes back to the 'basic' estimate of I
+    tmpI = I(1:t); %Always goes back to the 'basic' estimate of I.
+    %This could use the previous time-points last estimate to inform it, so
+    %that the 'burn in' is less long?
+
+    incidenceStore{t - tERTDeployed + 1} = zeros(t, GibbsSamples);
 
     for j = 1:GibbsSamples
 
         for i = 1:t
 
-            rangeI = C(i):round(2*(1+C(i))/rho); %perhaps make this a larger range?
+            rangeI = C(i):ceil(5*(1+C(i))/rho); %perhaps make this a larger range?
 
             pmfTmp = likelihoodOfTrueIncidence(tmpI, C(1:t), w, RpreERT, RERT, rangeI, i, tERTDeployed, rho);
             pmfTmp = round(pmfTmp/sum(pmfTmp), 10); %does this still add to 1? This is currently the PMF
@@ -43,7 +50,7 @@ for t = tERTDeployed:tEndCalc
             tmpI(i) = find(rand <= cmfTmp, 1) + C(i) - 1; %check this line is OK- copied from find part from internet
         end
 
-
+        incidenceStore{t - tERTDeployed + 1}(:, j) = tmpI;
 
         gammaTmp_t = gamma_tMostBasic([tmpI; zeros(Tinf-t, 1)], w, t);
         %add on zeros to get probability of no more cases
@@ -56,6 +63,10 @@ for t = tERTDeployed:tEndCalc
 end
 delete(f)
 
-probMoreCases = mean(probGibbsSample, 2);
+probMoreCases = mean(probGibbsSample(:, burnin + 1:thinning:end), 2);
+
+[~,pGeweke] = geweke(probGibbsSample(:, burnin + 1:thinning:end));
+
+output = struct('probMoreCases', probMoreCases, 'incidenceStore', incidenceStore, 'pGeweke', pGeweke);
 
 end

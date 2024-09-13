@@ -1,0 +1,10 @@
+% Script to find the sample values that yield stable probability estimates
+% for the two different methods
+
+GibbsSamples = 1e4;
+simSamples = 1e3;
+
+[probFutureCases1e4, risksBySimulation1e3] = meanConvergenceCheck(GibbsSamples, simSamples);
+
+simSamples = 1e4;
+[~, risksBySimulation1e4] = meanConvergenceCheck(GibbsSamples, simSamples);

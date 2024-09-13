@@ -7,7 +7,7 @@ paddedw = [w; zeros(T-k-1, 1)];
 
 for j = t:T
 
-    gamma = gamma + dot(I((j-1):-1:1), paddedw(1:(j-1)));
+    gamma = gamma + I((j-1):-1:1)'*paddedw(1:(j-1));
 
 end
 

@@ -17,7 +17,7 @@ if (t ~= 1)
 end
 
 %From gamma equation, we know that the serial interval only ever needs to
-%be as long as the incidence time-series length, minus 1 (as a maximum).
+%be as long as the incidencincidenceTrue = incidenceTrue(:, 1:numSamples);e time-series length, minus 1 (as a maximum).
 
 if length(w) <= (T-1)
 

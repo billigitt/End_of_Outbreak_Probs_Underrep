@@ -1,0 +1,24 @@
+% generate incidence
+
+w = [0.4 0.3 0.2 0.1];
+I_1 = 10;
+
+T = 10;
+tERTArrival = 5;
+
+RpreERT = 2;
+RERT = 0.5;
+
+I = [I_1; zeros(T-1, 1)];
+
+for t = 2:T
+
+    R_t = RpreERT + (RERT - RpreERT)*(t>=tERTArrival);
+
+    if length(w)<(t-1)
+
+    wTmp = [w zeros(1, t - 1 - length(w))];
+
+    I(t) = poissrnd(R_t*dot(I', wTmp))
+
+end
