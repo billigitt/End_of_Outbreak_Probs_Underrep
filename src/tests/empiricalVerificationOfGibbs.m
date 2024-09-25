@@ -9,7 +9,7 @@ rng(3)
 % seek to use Gibbs sampling to account for under-reporting when
 % calculating the end of outbreak probability.
 
-%% SI calculation (copied from RT's github)
+%% SI calculation
 
 SI_mean = 15.3/7;
 SI_sd = 9.3/7;
@@ -28,7 +28,7 @@ end
 
 %% Synthetic data generation
 
-GibbsSamples = 1e3;
+GibbsSamples = 1e5;
 I_1 = 10;
 rho = 0.5;
 T = 5;
@@ -122,7 +122,9 @@ for i = 1:length(rhoAssumed)
 
 end
 
-numSamples = 3;
+%%
+
+numSamples = 2e5;
 Tinf = 200;
 experimentsPerSample = 1e3;
 
@@ -132,7 +134,7 @@ simulationOutput = empiricalUnderrepEOOSmallMem(C, RpreERT, RERT, rhoAssumed(1),
 toc
 risksBySimulation = simulationOutput.riskWithdrawERT;
 
-%%
+%
 h(4) = plot(risksBySimulation);
 
 legend(h([1 2 3 4]), 'RT et. al. (distributional R)', 'RT et. al. (true R)', 'Gibbs rho=0.5', 'risks by sim')%, ...

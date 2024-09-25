@@ -1,5 +1,6 @@
 function I = renewalEqn(matrixI, w, R)
 
+%used for renewal eauation when generating synthetic data
 T = size(matrixI, 1);
 lengthSI = length(w);
 

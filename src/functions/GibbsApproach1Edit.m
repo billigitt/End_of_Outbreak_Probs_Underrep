@@ -27,7 +27,9 @@ zGeweke = zeros(tEndCalc, 1);
 for t = tERTDeployed:tEndCalc
 
     if getappdata(f,'canceling')
+
         break
+        
     end
 
     waitbar((t-tERTDeployed)/(tEndCalc-tERTDeployed),f,sprintf("t = "+t+" (of "+tERTDeployed+" to "+tEndCalc+")"))

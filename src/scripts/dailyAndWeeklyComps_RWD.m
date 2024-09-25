@@ -3,7 +3,7 @@ clear all
 clc
 close all
 
-set(0,'DefaultFigureWindowStyle', 'normal')
+set(0,'DefaultFigureWindowStyle', 'normal') 
 set(0,'DefaultTextInterpreter', 'none')
 set(0,'defaultAxesTickLabelInterpreter','none')
 set(0, 'defaultLegendInterpreter','none')
@@ -72,8 +72,6 @@ end
 
 wWeekly(1) = wWeekly(1) + (1-sum(wWeekly));
 
-% Daily incidence import, with Rt = 2 (pre ERT), Rt = 0.5 (during ERT)
-
 %The first day of the epidemiological week is 2nd April 2018. And so we
 %want this date to correspond to index 1. Since datenum('02-apr-2018') =
 %737152, when "datenumming" each date, we then minus 737151 so that the
@@ -99,11 +97,12 @@ idxERTDeployed = datenum([2018 5 8]) - 737151;
 idxERTWithdrawn = datenum([2018 7 24]) - 737151;
 incidenceBeforeERT = incidenceData(1:(idxERTDeployed-1));
 
+ERTPeriod = idxERTWithdrawn - idxERTDeployed;
+
 idxRiskPlotEnd = datenum([2018 9 15]) - 737151;
 
-% Rename as cases
-
 rho = 0.5;
+%rename as cases
 CDaily = incidenceData;
 
 % Weekly case calc (summing from daily cases). Also generate schematic.
@@ -114,15 +113,15 @@ CWeekly = sum(CDailyMat)';
 
 weeks = [datetime(2018, 4, 5, 12, 0, 0): caldays(7): datetime(2018, 10, 25, 12, 0, 0)] ;%This will take the first day of each epi week up to length of C
 figure
-bar(weeks(1:18), CWeekly(1:18), 'BarWidth',1, 'LineStyle','none')
+fill([datetime(2018, 5, 8) datetime(2018, 7, 24) datetime(2018, 7, 24)...
+    datetime(2018,5, 8)], [0 0 30 30], 'r', 'FaceAlpha',0.25, 'LineStyle','none')
 hold on
 xtickformat('dd/MM')
 xticks(datetime(2018, 4, 2) : caldays(7) : datetime(2018, 10, 22))
 xtickangle(45)
+bar(weeks(1:18), CWeekly(1:18), 'BarWidth',1, 'LineStyle','none')
 
-fill([datetime(2018, 5, 8) datetime(2018, 7, 24) datetime(2018, 7, 24)...
-    datetime(2018,5, 8)], [0 0 30 30], 'r', 'FaceAlpha',0.5, 'LineStyle','none')
-text(datetime(2018, 6, 15), 22, "Actual"+newline+"ERT period", 'HorizontalAlignment','center', 'Color','r', 'FontSize',25, 'FontName','aakar')
+text(datetime(2018, 6, 15), 22, "Actual ERT period", 'HorizontalAlignment','center', 'Color','r', 'FontSize',25, 'FontName','aakar')
 % text(datetime(2018, 7, 24), 22, "ERT"+newline+"withdrawal date", 'HorizontalAlignment','center', 'Color','r', 'FontSize', 20)
 text(datetime(2018, 6, 30), 12, "Withdraw ERT?", 'Color', 'k', 'HorizontalAlignment','center', 'FontSize',25, 'FontName','aakar')
 ylim([0 20])
@@ -136,7 +135,7 @@ for i = 1:13
 
 end
 
-ylabel('Reported incidence')
+ylabel('Weekly reported cases')
 xlabel('Date (dd/mm)')
 
 
@@ -149,9 +148,9 @@ title(" "+newline+" ")
 box off
 set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
-%% Calculate Rt posteriors (pre ERT and during ERT) (and using weekly and daily data)
+% Calculate Rt posteriors (pre ERT and during ERT) (and using weekly and daily data)
 
-%% Daily calculation - currently we do this such that we technically have more informationfor the daily inference than the weekly.
+% Daily calculation - currently we do this such that we technically have more informationfor the daily inference than the weekly.
 CDailyPreERT = CDaily(4:(7*floor((idxERTDeployed-1)/7))); %4 because 4th index correponds to first case
 CDailyERT = CDaily(7*ceil(idxERTDeployed/7)+1:(idxERTWithdrawn-1));
 
@@ -166,7 +165,7 @@ rateDuringERT = gamma_tMostBasic(incidenceData(1:(idxERTWithdrawn-1)), wDaily, i
 scaleDuringERT = 1/rateDuringERT;
 meanRDuringERTDaily = shapeDuringERT*scaleDuringERT;
 
-%% Weekly calculation
+%% Weekly R calculation
 %idxERTDeployed = 37, and so since 37/7 = 5.29, weeks 1 to 5 are pre-ERT,
 %and weeks 7 onwards are during ERT. Week 6is a hybrid week so cannot be
 %deemed either. idxERTWithdrawn/7 = 16.29 and so we only infer R from weeks
@@ -181,7 +180,7 @@ scaleBeforeERTWeekly = 1/rateBeforeERTWeekly;
 meanRBeforeERTWeekly = shapeBeforeERTWeekly*scaleBeforeERTWeekly;
 
 shapeDuringERT = 1 + sum(CWeeklyERT);
-rateDuringERT = gamma_tMostBasic(CWeekly, wWeekly, ceil(idxERTDeployed/7)); %check that the third arg is correct here
+rateDuringERT = gamma_tMostBasic(CWeekly, wWeekly, ceil(idxERTDeployed/7)+1); %3rd argument is 7, and corresponds to the week from which we multiply the poisson likelihoods together
 scaleDuringERT = 1/rateDuringERT;
 meanRDuringERTWeekly = shapeDuringERT*scaleDuringERT;
 
@@ -243,7 +242,7 @@ for t = tERTArrivalWeekly:tEndAnalysisWeekly
 
 end
 
-%% Plot to compare
+% Plot to compare
 
 
 days = [datetime(2018, 4, 2): caldays(1): datetime(2018, 10, 28)];
@@ -253,51 +252,36 @@ bar(days(1:65), CDaily(1:65), 'LineStyle', 'none', 'BarWidth', 1)
 xtickformat('dd/MM')
 xticks(datetime(2018, 4, 2) : caldays(7) : datetime(2018, 10, 22))
 xtickangle(45)
-ax = gca;
-labels = string(ax.XAxis.TickLabels); % extract
-labels(2:2:end) = nan; % remove every other one
-ax.XAxis.TickLabels = labels; % set
 xlabel('Date (dd/mm)')
-ylabel('Reported incidence')
+ylabel('Daily reported cases')
 set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
 box off
 
-
 figure
-% subplot(2, 1, 1)
-% bar(days, CDaily)
-% xtickformat('dd-MMM')
-% xticks(datetime(2018, 4, 2) : caldays(7*3) : datetime(2018, 10, 22))
-% xlabel('Days')
-% ylabel('Daily C_t')
-% subplot(2, 2, 2)
-% bar(weeks, CWeekly)
-% xlabel('Weeks')
-% ylabel('Weekly C_t')
-% xtickformat('dd-MMM')
-% xticks(datetime(2018, 4, 2) : caldays(7*3) : datetime(2018, 10, 22))
 subplot(1, 2, 1)
 RR = linspace(0, 8, 1e3);
-h(1) = plot(RR, gampdf(RR, shapeBeforeERTWeekly, scaleBeforeERTWeekly), 'color', colourMat(5, :));
+h(1) = plot(RR, gampdf(RR, shapeBeforeERTWeekly, scaleBeforeERTWeekly), ...
+    'color', 'k', 'LineStyle', '--', 'LineWidth', 2);
 hold on
-xline(meanRBeforeERTWeekly, 'color', colourMat(5, :), 'LineWidth', 2)
-h(2) = plot(RR, gampdf(RR, shapeBeforeERTDaily, scaleBeforeERTDaily), 'color', colourMat(6, :));
-xline(meanRBeforeERTDaily, 'color', colourMat(6, :), 'LineWidth', 2)
-xlabel('\itR\rm_{pre-ERT}')
+xline(meanRBeforeERTWeekly, 'color', 'k', 'LineWidth', 2, 'LineStyle', '--')
+h(2) = plot(RR, gampdf(RR, shapeBeforeERTDaily, scaleBeforeERTDaily), 'color', colourMat(5, :), 'LineWidth', 2);
+xline(meanRBeforeERTDaily, 'color', colourMat(5, :), 'LineWidth', 2)
+xlabel('Reproduction number (\itR\rm)')
 ylabel('Probability density')
 legend(h([2 1]), 'Daily data', 'Weekly data')
 xlim([0 8])
 box off
 subplot(1, 2, 2)
 %riskDailyCalc is indexed by day, and we want day 43 to end in jumps of 7
-h(1) = plot(weeks(ceil(idxERTDeployed/7)+1:31), riskDailyCalc(43:7:end), 'color', colourMat(6, :)); %Take off first value because the first point for daily is with 0 data, where as weekly has a whole week.
+h(1) = plot(weeks(ceil(idxERTDeployed/7)+1:31), riskDailyCalc(43:7:end), 'color', colourMat(5, :), 'LineWidth', 2); %Take off first value because the first point for daily is with 0 data, where as weekly has a whole week.
 hold on
 %riskWeeklyCalc is indexed by week, and we want week 7 to end.
-h(2) = plot(weeks(ceil(idxERTDeployed/7)+1:31), riskWeeklyCalc(7:end), 'color', colourMat(5, :), 'LineStyle', '--'); 
+h(2) = plot(weeks(ceil(idxERTDeployed/7)+1:31), riskWeeklyCalc(7:end), 'color', 'k', 'LineStyle', '--', 'LineWidth', 2); 
+xline(datetime(2018, 7, 24), 'r', 'LineWidth', 2)
 legend(h([1 2]), 'Daily data', 'Weekly data')
 xlabel('Date (dd/mm)')
-ylabel("Probability of"+newline+"future cases")
+ylabel("Probability of future cases")
 xtickformat('dd/MM')
 xticks(weeks(ceil(idxERTDeployed/7)+1:31))
 xlim([weeks(ceil(idxERTDeployed/7)+1) weeks(31)])
@@ -312,16 +296,18 @@ box off
 set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
 
-%% Using weekly data, account for under-reporting.
+% Using weekly data, account for under-reporting.
 
-rho = [(0.3:0.1:0.8) 1];
-GibbsSamples = 1e5;
+rho = 0.3:0.1:1;
+GibbsSamples = 1e5; 
 burnin = GibbsSamples/10;
-thinning = 10;
+thinning = 10; 
 probMoreCasesWithRho = zeros(tEndAnalysisWeekly, length(rho));
-statGeweke = zeros(tEndAnalysisWeekly, length(rho));
+statGewekeRho = zeros(tEndAnalysisWeekly, length(rho));
 
-%Un-comment these lines when computing risks again
+probGibbsSample = zeros(tEndAnalysisWeekly, GibbsSamples, length(rho));
+
+%UN-COMMENT FOLLOWING LINES WHEN COMPUTING P(T) CURVE AGAIN
 
 % for i = 1:length(rho)
 % 
@@ -330,61 +316,98 @@ statGeweke = zeros(tEndAnalysisWeekly, length(rho));
 %         tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
 % 
 %     probMoreCasesWithRho(:, i) = output(1).probMoreCases;
-%     statGeweke(:, i) = output(1).pGeweke;
+%     probGibbsSample(:, :, i) = output(1).probGibbsSample;
+%     statGewekeRho(:, i) = output(1).pGeweke;
 % end
+% 
+% save('../mats/YOURFILENAME.mat') %set YOURFILENAME to fig3Gibbs1e5RhoNew
+% or similar, and remove future loads.
 
-load('../mats/fig3Gibbs1e5')
+load('../mats/fig3Gibbs1e5RhoNew')
 
-weekSafe = zeros(7, 1);
+% Burn-in with 10,000 did not initially work so we use burn-in = 20,000 and find Geweke tests are passed in all cases
+
+zGeweke = zeros(31, 8);
+pGewekeBuiltIn = zeros(31, 8);
+
+burnin = 2e4;
+
+for j = 1:length(rho)
+
+    for jj = 7:31
+
+        [zGeweke(jj, j), pGewekeBuiltIn(jj, j)] = geweke(probGibbsSample(jj, burnin + 1:thinning:end, j)');
+
+    end
+
+    probMoreCasesWithRho(:, j) = mean(probGibbsSample(:, burnin + 1:thinning:end, j), 2);
+
+end
+
+%When choosing this burn-in, all the Geweke stats exceed 0.05, meaning we
+%can accept the null hypothesis that the first 10% of the chain (sans burn
+%in) has the same mean as the last 50% of the chain (sans burn-in). Thsi
+%suggests that the chain has converged.
+
+%%
+
+weekSafe = zeros(8, 1);
+
+
+%%% FIG 3
 
 figure
 subplot(1, 2, 1)
 hold on
-for i = 1:6
+for i = 1:7
 
     if i == 4
 
-        h(i) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end, i), 'color', ...
-            ((8-i)/8)*colourMat(2, :), 'Marker', 'x');
+        h(i) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end-1, i), 'color', ...
+            ((9-i)/9)*colourMat(2, :), 'Marker', 'x');
 
     else
 
-        h(i) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end, i), 'color', ...
-            ((8-i)/8)*colourMat(2, :));
+        h(i) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end-1, i), 'color', ...
+            ((9-i)/9)*colourMat(2, :));
     end
-    weekSafe(i) = find(probMoreCasesWithRho(6:end, i)<=0.01, 1);
+    weekSafe(i) = find(probMoreCasesWithRho(7:end, i)<=0.05, 1)-1/7;
 
 end
 
-h(7) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end, 7), 'k--');
-weekSafe(7) = find(probMoreCasesWithRho(6:end, 7)<=0.01, 1);
+h(8) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end-1, end), 'k--');
+weekSafe(8) = find(probMoreCasesWithRho(7:end, 8)<=0.05, 1)-1/7;
 
-xtickformat('dd-MMM')
+xtickformat('dd/MM')
 xticks(datetime(2018, 4, 2) : caldays(7*3) : datetime(2018, 10, 22))
-ylabel("Probability of"+newline+"future cases")
-xlabel('Date')
-h(8) = xline(datetime(2018, 7, 24), 'r', 'LineWidth', 2);
-legend(h(1:8), '\fontsize{15}\rho = 0.3', '\fontsize{15}\rho = 0.4', ...
+ylabel("Probability of future cases")
+xlabel('Date (dd/mm)')
+h(9) = xline(datetime(2018, 7, 24), 'r', 'LineWidth', 2);
+legend(h(1:9), '\fontsize{15}\rho = 0.3', '\fontsize{15}\rho = 0.4', ...
     '\fontsize{15}\rho = 0.5', '\fontsize{15}\rho = 0.6', '\fontsize{15}\rho = 0.7',...
-    '\fontsize{15}\rho = 0.8', '\fontsize{15}\rho = 1', ...
-    "\fontsize{15}24/07 (Actual"+newline+"ERT with-"+newline+"drawal date)")
+    '\fontsize{15}\rho = 0.8', '\fontsize{15}\rho = 0.9', '\fontsize{15}\rho = 1', ...
+    "\fontsize{15}Actual ERT"+newline+"withdrawal date")
 xlim([weeks(ceil(idxERTDeployed/7)+1) weeks(30)])
 xtickformat('dd/MM')
 subplot(1, 2, 2)
 bar(rho, weekSafe, 'FaceColor',colourMat(2, :))
-xlabel('Reporting probability, \rho')
-ylabel('Theoretical ERT period')
-set(gcf,'Position',[100 100 1350 600])
+hold on
+yline(ERTPeriod/7, 'r', 'LineWidth', 2)
+xlabel('Reporting probability (\rho)')
+ylabel('Theoretical ERT period (weeks)')
+set(gcf,'Position',[100 100 1550 600])
 set(gcf, 'color', 'none')
 box off
 xlim([0.25 1.05])
+xticks(0.3:0.1:1)
+xticklabels({'0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1'})
 
 
-%% FIG S1
+%%% FIG S1
 
 load('../mats/convergenceOfGibbs.mat')
 load('../mats/convergenceOfSims.mat')
-%%
+%
 figure
 yyaxis left
 bar([[1 0 1] zeros(1, length(probFutureCases1e5)-3)], 'LineStyle', 'none', 'BarWidth', 1)
@@ -392,10 +415,10 @@ ylabel('Reported cases')
 yticks([0 1])
 hold on
 yyaxis right
-h(1) = plot([[nan; nan]; probFutureCases1e5(3:end)], 'color', colourMat(2, :), 'LineWidth', 2);
-h(2) = plot([[nan; nan]; risksBySimulation2e5(3:end-2)], 'k--', 'LineWidth', 2);
-xlabel('Weeks')
-ylabel("Probability of"+newline+"future cases")
+h(1) = plot(0.5:12.5, [[nan; nan; nan]; probFutureCases1e5(4:end)], 'color', colourMat(2, :), 'LineWidth', 2);
+h(2) = plot(0.5:12.5, [[nan; nan; nan]; risksBySimulation2e5(4:end-2)], 'k--', 'LineWidth', 2);
+xlabel('Time (weeks)')
+ylabel("Probability of future cases")
 ylim([0 1])
 xtickangle(0)
 xlim([0 13])
@@ -407,7 +430,7 @@ box off
 set(gcf,'Position',[100 100 700 600])
 set(gcf, 'color', 'none')
 
-legend(h([1 2]), 'Novel method', 'Simulation method')
+legend(h([1 2]), 'Gibbs sampling', 'Simulation method')
 
 disp("max error for Gibbs between 1e6 and 1e5 is "+max(abs(probFutureCases1e5 - probFutureCases1e6)))
 disp("max error for Gibbs between 1e5 and 1e4 is "+max(abs(probFutureCases1e5 - probFutureCases1e4)))
@@ -416,10 +439,39 @@ disp("max error for Simulations between 2e4 and 2e5 is "+max(abs(risksBySimulati
 
 disp("max error in plots is"+max(abs(probFutureCases1e5(3:end) - risksBySimulation2e5(3:end-2))))
 
-% This suggests that we need to choose Gibbs = 1e5 and Sims = 2e4 (does 2e4
-% look wierd in the manuscript?) I am now thinking that an absolute error
-% of less than 0.005 is fine (low relative errors will require really high
-% number of 
-% samples)
-%NB: used rho = 0.5, R = 0.5, need to redo Gibbs because we need to
-%estimate risk for slightly longer.
+% This suggests that we need to choose Gibbs = 1e5 and Sims = 2e4.
+
+%%% FIG 4
+
+rhoPMF = [0.1 0.15 0.25 0.25 0.15 0.1];
+weightedProbFutureCases = rhoPMF*probMoreCasesWithRho(1:end-1, 3:end)';
+
+figure
+subplot(1, 2, 1)
+bar(0.5:0.1:1, rhoPMF, 'BarWidth', 1)
+ylim([0 0.275])
+xlim([0.425 1.075])
+xlabel('Reporting probability (\rho)')
+ylabel('Probability')
+xticks(0.5:0.1:1)
+box off
+
+subplot(1, 2, 2)
+h(1) = plot(weeks(ceil(idxERTDeployed/7)+1:30), weightedProbFutureCases(7:end));
+hold on
+h(2) = plot(weeks(ceil(idxERTDeployed/7)+1:30), probMoreCasesWithRho(ceil(idxERTDeployed/7)+1:end-1, end), 'k--');
+xlabel('Date (dd/mm) ')
+ylabel('Probability of future cases')
+xtickangle(45)
+xtickformat('dd/MM')
+xticks(datetime(2018, 4, 2) : caldays(7*3) : datetime(2018, 10, 22))
+
+box off
+
+set(gcf,'Position',[100 100 1150 600])
+set(gcf, 'color', 'none')
+
+xlim([weeks(ceil(idxERTDeployed/7)+1) weeks(30)])
+xline(datetime(2018, 7, 24), 'r', 'LineWidth', 2)
+legend(h([1 2]), 'Uncertain \rho', '\rho = 1')
+

@@ -4,7 +4,7 @@ lengthRangeI = length(rangeI);
 
 T = length(I);
 
-temporalR = [ones(tERTDeployed - 2, 1)*RpreERT; ones(T - tERTDeployed + 1, 1)*RERT];
+temporalR = [ones(tERTDeployed - 2, 1)*RpreERT; ones(T - tERTDeployed + 1, 1)*RERT]; %So only from tERTDeployed do we model the R_ERT value.
 temporalR = repmat(temporalR, 1, lengthRangeI);
 
 I2D = repmat(I(2:T), 1, lengthRangeI);

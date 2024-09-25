@@ -1,3 +1,0 @@
-OK, so looks like it's going to require really large samples to get the relative error to less than 1%. But I have found that (prob_1e5 - prob_1e6)/prob1e6 is always less than 0.05 (i.e. 5% relative error) so that's probably good enough? i.e. we recommend using 100,000 samples.
-
-
