@@ -1,8 +1,9 @@
-% Cleaning
+%% Cleaning
 clear all
 clc
 close all
 
+%% Set figure specifications
 set(0,'DefaultFigureWindowStyle', 'normal') 
 set(0,'DefaultTextInterpreter', 'none')
 set(0,'defaultAxesTickLabelInterpreter','none')
@@ -28,23 +29,30 @@ colourMat = [0.9 0.6 0;... %orange 1
     0.8 0.4 0;... %red 6
     0.4940 0.1840 0.5560]; % purple 7
 
-%Risk(t) is in this file are defined to be the probability of no more cases
-% after (and including) week t, given data (full weeks) from week the first week to week
-% t-1.
 
+%% Make available required functions
 addpath('../functions')
 
+%% -------------
+% Risk(t) as in this file are defined to be the probability of no more cases
+% after (and including) week t, given data (full weeks) from the first week to week
+% t-1.
+%% -------------
+
+%% Seed the random number generator
 rng(1)
 
-% Daily serial interval calc
+%% Daily serial interval calc
 
+% Specify mean and standard deviation of gamma-distributed serial interval (SI)
 SI_mean_daily = 15.3;
 SI_sd_daily = 9.3;
 
+% Parameterise gamme distributed SI in terms of scale and shape parameters
 SI_scale_daily = SI_sd_daily^2/SI_mean_daily;
 SI_shape_daily = SI_mean_daily/SI_scale_daily;
 
-
+% Discretise the SI (daily timesteps)
 wDaily = zeros(100,1);
 for k = 1:100
     intVals = [k-1:(1/10000):k+1];
@@ -52,17 +60,21 @@ for k = 1:100
     wDaily(k) = trapz(intVals, funcVals);
 end
 
+% Numerical correction to first entry to ensure wDaily sums to 1
 wDaily(1) = wDaily(1) + (1-sum(wDaily));
 
-% Weekly serial interval calc
+%% Weekly serial interval calc
 
-P = 7;
+% Specify mean and standard deviation of gamma-distributed serial interval (SI)
+P = 7; % Conversion factor from days to weeks of 7 days
 SI_mean_weekly = 15.3/P;
 SI_sd_weekly = 9.3/P;
 
+% Parameterise gamme distributed SI in terms of scale and shape parameters
 SI_scale_weekly = SI_sd_weekly^2/SI_mean_weekly;
 SI_shape_weekly = SI_mean_weekly/SI_scale_weekly;
 
+% Discretise the SI (weekly timesteps)
 wWeekly = zeros(100,1);
 for k = 1:100
     intVals = linspace((k-1), (k+1), 1000);
@@ -70,15 +82,24 @@ for k = 1:100
     wWeekly(k) = trapz(intVals, funcVals);
 end
 
+% Numerical correction to first entry to ensure wDaily sums to 1
 wWeekly(1) = wWeekly(1) + (1-sum(wWeekly));
 
+%% Data set up
+
+% ------------
 %The first day of the epidemiological week is 2nd April 2018. And so we
 %want this date to correspond to index 1. Since datenum('02-apr-2018') =
 %737152, when "datenumming" each date, we then minus 737151 so that the
 %indices are correctly alligned.
+% ------------
 
+% Set up time horizon for analysis & initialise storage vector for
+% incidence counts
 totalTime = 2.1e2;
 incidenceData = zeros(totalTime, 1);
+
+% Set up array entry access values for case counts (1 case, 2 cases, 3 cases, 6 cases) on specified dates
 idx1s = datenum([2018 4 5; 2018 4 8; 2018 4 13; 2018 4 18;...
     2018 4 19; 2018 4 20; 2018 4 21; 2018 4 23; 2018 4 24; 2018 4 25;...
     2018 4 27; 2018 5 6; 2018 5 7; 2018 5 8; 2018 5 12; 2018 5 28; ...
@@ -93,16 +114,18 @@ incidenceData(idx2s') = 2;
 incidenceData(idx3s') = 3;
 incidenceData(idx6s') = 6;
 
+% Set up array entry access values corresponding to ERT periods
 idxERTDeployed = datenum([2018 5 8]) - 737151;
 idxERTWithdrawn = datenum([2018 7 24]) - 737151;
+ERTPeriod = idxERTWithdrawn - idxERTDeployed; % Specify length of ERT period
+
+% Assign incidence for time period before ERT was deployed to vector
 incidenceBeforeERT = incidenceData(1:(idxERTDeployed-1));
 
-ERTPeriod = idxERTWithdrawn - idxERTDeployed;
-
-idxRiskPlotEnd = datenum([2018 9 15]) - 737151;
-
+% Case reporting proportion parameter
 rho = 0.5;
-%rename as cases
+
+%rename incidenceData as CDaily
 CDaily = incidenceData;
 
 % Weekly case calc (summing from daily cases). Also generate schematic.
@@ -135,10 +158,9 @@ for i = 1:13
 
 end
 
+% Specify axis labels
 ylabel('Weekly reported cases')
 xlabel('Date (dd/mm)')
-
-
 
 ax = gca;
 labels = string(ax.XAxis.TickLabels); % extract
