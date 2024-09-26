@@ -12,7 +12,7 @@ All code written in MATLAB, compatible with version R2021b.
 
 Code for reproducing figures 1, 2, 3, 4, S1 and S2 can be found in "src/scripts/dailyAndWeeklyComps_RWD.m".
 
-Code for the analysis to all figures can be found in the fie given above, other than figure S1, which can be found in "src/tests/convergenceOfSuperSimpleSyntheticExample.m". Note that this file may take several hours to run, if 'simSamples' variable is large (i.e. 200,000 as in the manuscript). To run the analysis for generating figures 3 and 4 (where the Gibbs-sampling method was used), you must un-comment lines 312-321.
+Code for the analysis to all figures can be found in the file given above, other than figure S1, which can be found in "src/tests/convergenceOfSuperSimpleSyntheticExample.m". Note that this file may take several hours to run, if 'simSamples' variable is large (i.e. 200,000 as in the manuscript). To run the analysis for generating figures 3 and 4 (where the Gibbs-sampling method was used), you must un-comment lines 312-321.
 
 ![fig1](outputs/Fig1.pdf)
 
