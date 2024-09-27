@@ -29,9 +29,9 @@ colourMat = [0.9 0.6 0;... %orange 1
     0.8 0.4 0;... %red 6
     0.4940 0.1840 0.5560]; % purple 7
 
-
-%% Make available required functions
+%% Make available required functions and package files
 addpath('../functions')
+addpath('../packages/mcmcstat-master') % use mcmcstat for geweke calculation
 
 %% -------------
 % Risk(t) as in this file are defined to be the probability of no more cases
