@@ -1,3 +1,10 @@
+% ------------
+% We consider a disease incidence time series dataset from an EVD outbreak that took place in Équateur Province, DRC, in 2018.
+% In total, 54 cases (40 confirmed cases and 14 probable cases) occurred between 5th April and 2nd June 2018. 
+% The Emergency Response Team (ERT) was deployed on 8th May 2018 and was withdrawn on 24th July 2018. 
+% The overall goal of our analysis is to determine the risk of withdrawing the ERT (i.e., the probability of future cases) at the beginning of each week following the deployment of the ERT
+% ------------
+
 %% Cleaning
 clear all
 clc
@@ -88,10 +95,17 @@ wWeekly(1) = wWeekly(1) + (1-sum(wWeekly));
 %% Data set up
 
 % ------------
-%The first day of the epidemiological week is 2nd April 2018. And so we
-%want this date to correspond to index 1. Since datenum('02-apr-2018') =
-%737152, when "datenumming" each date, we then minus 737151 so that the
-%indices are correctly alligned.
+% Disease incidence data: 
+%  - EVD outbreak that took place in Équateur Province, DRC, in 2018.
+%  - 54 cases (40 confirmed cases and 14 probable cases) occurred between 5th April and 2nd June 2018. 
+%  - ERT deployed on 8th May 2018 and was withdrawn on 24th July 2018. 
+% ------------
+
+% ------------
+% The first day of the epidemiological week was 2nd April 2018. And so we
+% want this date to correspond to index 1. Since datenum('02-apr-2018') =
+% 737152, when "datenumming" each date, we then minus 737151 so that the
+% indices are correctly alligned.
 % ------------
 
 % Set up time horizon for analysis & initialise storage vector for
@@ -99,7 +113,7 @@ wWeekly(1) = wWeekly(1) + (1-sum(wWeekly));
 totalTime = 2.1e2;
 incidenceData = zeros(totalTime, 1);
 
-% Set up array entry access values for case counts (1 case, 2 cases, 3 cases, 6 cases) on specified dates
+% Set up array entry access values for case counts (1 case, 2 cases, 3 cases, 6 cases) that occurred on specified dates
 idx1s = datenum([2018 4 5; 2018 4 8; 2018 4 13; 2018 4 18;...
     2018 4 19; 2018 4 20; 2018 4 21; 2018 4 23; 2018 4 24; 2018 4 25;...
     2018 4 27; 2018 5 6; 2018 5 7; 2018 5 8; 2018 5 12; 2018 5 28; ...
@@ -128,12 +142,14 @@ rho = 0.5;
 %rename incidenceData as CDaily
 CDaily = incidenceData;
 
-% Weekly case calc (summing from daily cases). Also generate schematic.
-% FIG 1
 
+%% Generate FIG 1 - visulisation of the ERT withdrawl time schematic
+
+% Weekly case calc (summing from daily cases).
 CDailyMat = reshape(CDaily, 7, totalTime/7);
 CWeekly = sum(CDailyMat)';
 
+% Plot generation
 weeks = [datetime(2018, 4, 5, 12, 0, 0): caldays(7): datetime(2018, 10, 25, 12, 0, 0)] ;%This will take the first day of each epi week up to length of C
 figure
 fill([datetime(2018, 5, 8) datetime(2018, 7, 24) datetime(2018, 7, 24)...
@@ -145,7 +161,6 @@ xtickangle(45)
 bar(weeks(1:18), CWeekly(1:18), 'BarWidth',1, 'LineStyle','none')
 
 text(datetime(2018, 6, 15), 22, "Actual ERT period", 'HorizontalAlignment','center', 'Color','r', 'FontSize',25, 'FontName','aakar')
-% text(datetime(2018, 7, 24), 22, "ERT"+newline+"withdrawal date", 'HorizontalAlignment','center', 'Color','r', 'FontSize', 20)
 text(datetime(2018, 6, 30), 12, "Withdraw ERT?", 'Color', 'k', 'HorizontalAlignment','center', 'FontSize',25, 'FontName','aakar')
 ylim([0 20])
 
@@ -158,7 +173,7 @@ for i = 1:13
 
 end
 
-% Specify axis labels
+% Specify axis labels 
 ylabel('Weekly reported cases')
 xlabel('Date (dd/mm)')
 
@@ -170,9 +185,10 @@ title(" "+newline+" ")
 box off
 set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
-% Calculate Rt posteriors (pre ERT and during ERT) (and using weekly and daily data)
 
-% Daily calculation - currently we do this such that we technically have more informationfor the daily inference than the weekly.
+%% Calculate Rt posteriors (pre ERT and during ERT) (and using weekly and daily data)
+
+% Daily calculation - currently we do this such that we technically have more information for the daily inference than the weekly.
 CDailyPreERT = CDaily(4:(7*floor((idxERTDeployed-1)/7))); %4 because 4th index correponds to first case
 CDailyERT = CDaily(7*ceil(idxERTDeployed/7)+1:(idxERTWithdrawn-1));
 
@@ -187,9 +203,9 @@ rateDuringERT = gamma_tMostBasic(incidenceData(1:(idxERTWithdrawn-1)), wDaily, i
 scaleDuringERT = 1/rateDuringERT;
 meanRDuringERTDaily = shapeDuringERT*scaleDuringERT;
 
-%% Weekly R calculation
+% Weekly R calculation
 %idxERTDeployed = 37, and so since 37/7 = 5.29, weeks 1 to 5 are pre-ERT,
-%and weeks 7 onwards are during ERT. Week 6is a hybrid week so cannot be
+%and weeks 7 onwards are during ERT. Week 6 is a hybrid week so cannot be
 %deemed either. idxERTWithdrawn/7 = 16.29 and so we only infer R from weeks
 %7 to 16 for during ERT.
 CWeeklyPreERT = CWeekly(1:5);
@@ -209,12 +225,12 @@ meanRDuringERTWeekly = shapeDuringERT*scaleDuringERT;
 %% Calculate EOO with daily data (using end pts + daily SI)
 
 TinfDaily = 7*30;
-tEndAnalysis = 7*30 + 1; %The +1 means that you estimate the probability of 0s from the next day after
-% a full week, which will be comparable to weekly data
+tEndAnalysis = 7*30 + 1; 
+    % The +1 means that you estimate the probability of 0s from the next day after
+    % a full week, which will be comparable to weekly data
 
 gammaDailyCalc = zeros(tEndAnalysis, 1);
 riskDailyCalc = gammaDailyCalc;
-
 
 for t = (7*ceil(idxERTDeployed/7)+1):tEndAnalysis %Starting at day 43.
 
@@ -233,7 +249,7 @@ for t = (7*ceil(idxERTDeployed/7)+1):tEndAnalysis %Starting at day 43.
 
 end
 
- % we want all contributions to be mod 1
+% we want all contributions to be mod 1
 % as these will be the ones that use the data from the  full week
 
 %% Calculate EOO with weekly data (using weekly SI)
@@ -264,11 +280,11 @@ for t = tERTArrivalWeekly:tEndAnalysisWeekly
 
 end
 
-% Plot to compare
-
+%% Generate FIG S1 - Daily numbers of reported cases in the 2018 EVD outbreak in Équateur Province, DRC.
 
 days = [datetime(2018, 4, 2): caldays(1): datetime(2018, 10, 28)];
 weeks = [datetime(2018, 4, 2): caldays(7): datetime(2018, 10, 29)];
+
 figure
 bar(days(1:65), CDaily(1:65), 'LineStyle', 'none', 'BarWidth', 1)
 xtickformat('dd/MM')
@@ -280,6 +296,7 @@ set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
 box off
 
+%% Generate FIG 2 - Probability of future cases estimated from either weekly or daily disease incidence time series data, assuming perfect case reporting.
 figure
 subplot(1, 2, 1)
 RR = linspace(0, 8, 1e3);
@@ -318,7 +335,7 @@ box off
 set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
 
-% Using weekly data, account for under-reporting.
+%% Using weekly data, account for under-reporting.
 
 rho = 0.3:0.1:1;
 GibbsSamples = 1e5; 
@@ -371,12 +388,9 @@ end
 %in) has the same mean as the last 50% of the chain (sans burn-in). Thsi
 %suggests that the chain has converged.
 
-%%
+%% Generate FIG 3 - Estimated probability of future cases accounting for case under-reporting.
 
 weekSafe = zeros(8, 1);
-
-
-%%% FIG 3
 
 figure
 subplot(1, 2, 1)
@@ -425,7 +439,7 @@ xticks(0.3:0.1:1)
 xticklabels({'0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1'})
 
 
-%%% FIG S1
+%% Generate FIG S2 - Comparison of results from the Gibbs sampling method (as used in the main text) and an alternative approach involving repeated model simulation. 
 
 load('../mats/convergenceOfGibbs.mat')
 load('../mats/convergenceOfSims.mat')
@@ -463,7 +477,7 @@ disp("max error in plots is"+max(abs(probFutureCases1e5(3:end) - risksBySimulati
 
 % This suggests that we need to choose Gibbs = 1e5 and Sims = 2e4.
 
-%%% FIG 4
+%% Generate FIG 4 - Accounting for uncertainty in the case reporting probability, 𝝆, when estimating the probability of future cases.
 
 rhoPMF = [0.1 0.15 0.25 0.25 0.15 0.1];
 weightedProbFutureCases = rhoPMF*probMoreCasesWithRho(1:end-1, 3:end)';
