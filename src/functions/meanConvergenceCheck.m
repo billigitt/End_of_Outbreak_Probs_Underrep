@@ -1,9 +1,10 @@
 function [probFutureCases, risksBySimulation] = meanConvergenceCheck(GibbsSamples, numSamples)
 
 % This function is simply used in the testing procedure to find the sampling values such that we
-% get stable, non-chabging risk estimates.
+% get stable, non-changing risk estimates. The test is on a very simple epidemic, with only 2 cases.
+% We can then copare the outputs to see if we have converged at the same estimates.
 
-%% SI calculation (copied from RT's github)
+%% SI calculation
 
 SI_mean = 15.3/7;
 SI_sd = 9.3/7;
@@ -95,7 +96,7 @@ thinning = 10;
 
 for i = 1:length(rhoAssumed)
 
-    outputGibbs = GibbsApproach1Edit([C; zeros(tEndCalc-T, 1)], SI_discrete, rhoAssumed(i), GibbsSamples, RpreERT, RERT, tERTArrival, tEndCalc, burnin, thinning);
+    outputGibbs = GibbsApproach([C; zeros(tEndCalc-T, 1)], SI_discrete, rhoAssumed(i), GibbsSamples, RpreERT, RERT, tERTArrival, tEndCalc, burnin, thinning);
 
     probFutureCases = outputGibbs.probMoreCases;
 

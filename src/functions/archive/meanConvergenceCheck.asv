@@ -1,10 +1,9 @@
 function [probFutureCases, risksBySimulation] = meanConvergenceCheck(GibbsSamples, numSamples)
 
 % This function is simply used in the testing procedure to find the sampling values such that we
-% get stable, non-changing risk estimates. The test is on a very simple epidemic, with only 2 cases.
-% We can then copare the outputs to see if we have converged at the same estimates.
+% get stable, non-chabging risk estimates.
 
-%% SI calculation
+%% SI calculation (copied from RT's github)
 
 SI_mean = 15.3/7;
 SI_sd = 9.3/7;
@@ -13,21 +12,19 @@ SI_scale = SI_sd^2/SI_mean;
 SI_shape = SI_mean/SI_scale;
 
 
-SI_discrete = zeros(50,1);
-for k = 1:50
+SI_discrete = zeros(10,1);
+for k = 1:10
     intVals = [k-1:(1/10000):k+1];
     funcVals = (1 - abs(intVals - k)).*gampdf(intVals,SI_shape,SI_scale);
     SI_discrete(k) = trapz(intVals, funcVals);
 end
-
-SI_discrete(1) = SI_discrete(1) + (1-sum(SI_discrete));
 
 %% Synthetic data generation
 
 I_1 = 10;
 rho = 0.5;
 T = 5;
-RpreERT = 0.5;
+RpreERT = 1;
 RERT = 0.5;
 tERTArrival = floor(2*T/3);
 
@@ -96,13 +93,13 @@ thinning = 10;
 
 for i = 1:length(rhoAssumed)
 
-    outputGibbs = GibbsApproach([C; zeros(tEndCalc-T, 1)], SI_discrete, rhoAssumed(i), GibbsSamples, RpreERT, RERT, tERTArrival, tEndCalc, burnin, thinning);
+    outputGibbs = GibbsApproach1Edit([C; zeros(tEndCalc-T, 1)], SI_discrete, rhoAssumed(i), GibbsSamples, RpreERT, RERT, tERTArrival, tEndCalc, burnin, thinning);
 
     probFutureCases = outputGibbs.probMoreCases;
 
 end
 
-Tinf = 500;
+Tinf = 200;
 experimentsPerSample = 1e3;
 
 % simulationOutput = empiricalUnderrepEOOSmallMem(C, RpreERT, RERT, rhoAssumed(1), SI_discrete', numSamples, tERTArrival, tEndCalc, Tinf, experimentsPerSample);

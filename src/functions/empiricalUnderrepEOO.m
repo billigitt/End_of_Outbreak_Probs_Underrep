@@ -1,6 +1,8 @@
 function output = empiricalUnderrepEOO(C_data, RpreERT, RERT, rho, w, ...
     numSamples, tERTArrival, tEndAnalysis, Tinf, experimentsPerSample)
 
+%Function to generate estimate of probability of future cases by simulation. Function inputs generally are understandable in context of paper. w is the serial interval, numSamples is the number of simulated epidemcis (underlying the C_data), and experimentsPerSample is the number of simulations going forward up to Tinf (to observe future cases) for each simulated peidemic. 
+
 C_1 = C_data(1);
 T = length(C_data);
 

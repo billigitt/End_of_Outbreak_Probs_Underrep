@@ -1,5 +1,7 @@
 function likelihood = likelihoodOfTrueIncidence(I, C, w, RpreERT, RERT, rangeI, t, tERTDeployed, rho)
 
+%Function to calculate the log likelihood if the observed number of cases given the total incidence, using the likelihood described in the manuscript. This code is vectrised so that the likelihood over the entire range can be calculated together. Inputs are undertandable in context of manuscript, w is the serial interval, rangeI is the rnage of plausible true incidences considered in the domain of the PMF.
+
 lengthRangeI = length(rangeI);
 
 T = length(I);

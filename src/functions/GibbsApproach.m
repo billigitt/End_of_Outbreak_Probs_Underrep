@@ -1,5 +1,7 @@
-function output = GibbsApproach1Edit(C, w, rho, GibbsSamples, RpreERT, RERT, ...
+function output = GibbsApproach(C, w, rho, GibbsSamples, RpreERT, RERT, ...
     tERTDeployed, tEndCalc, burnin, thinning)
+
+%Function to generate estimate of probability of future cases by Gibbs Sampling. Function inputs generally are understandable in context of paper. w is the serial interval, GibbsSamples is the number of iterations in the Gibbs sampling method.
 
 %Most basic approach: We assume that we know the Rt values exactly, and use
 %this to inform our inference.
@@ -12,12 +14,12 @@ f = waitbar(0,'1','Name','Calculating risks...',...
 
 setappdata(f,'canceling',0);
 
-I = round((1+C)/rho); %'basic' estimate of I
+I = round((C)/rho); %'basic' estimate of I
 T = length(I);
 
 probGibbsSample = zeros(T, GibbsSamples);
 
-Tinf = 500; %perhaps make this an input?
+Tinf = 200;
 
 incidenceStore = cell(tEndCalc - tERTDeployed + 1, 1);
 pGeweke = zeros(tEndCalc, 1);
@@ -35,8 +37,6 @@ for t = tERTDeployed:tEndCalc
     waitbar((t-tERTDeployed)/(tEndCalc-tERTDeployed),f,sprintf("t = "+t+" (of "+tERTDeployed+" to "+tEndCalc+")"))
 
     tmpI = I(1:(t-1)); %Always goes back to the 'basic' estimate of I.
-    %This could use the previous time-points last estimate to inform it, so
-    %that the 'burn in' is less long?
 
     incidenceStore{t - tERTDeployed + 1} = zeros((t-1), GibbsSamples);
 
@@ -44,7 +44,7 @@ for t = tERTDeployed:tEndCalc
 
         for i = 1:(t-1)
 
-            rangeI = C(i):ceil(5*(1+C(i))/rho); %perhaps make this a larger range?
+            rangeI = C(i):ceil(5*(1+C(i))/rho); 
 
             if (rho == 1)
 
@@ -53,12 +53,11 @@ for t = tERTDeployed:tEndCalc
             else
 
                 pmfTmp = likelihoodOfTrueIncidence(tmpI, C(1:(t-1)), w, RpreERT, RERT, rangeI, i, tERTDeployed, rho);
-                pmfTmp = round(pmfTmp/sum(pmfTmp), 10); %does this still add to 1? This is currently the PMF
+                pmfTmp = round(pmfTmp/sum(pmfTmp), 10); 
                 % for the hidden number of infections.
                 cmfTmp = cumsum(pmfTmp);
 
-                %tmpI(i) = randsample(length(pmfTmp), 1, true, pmfTmp) + C(i) - 1; % adding C(t) - 1 makes it a sample of the true # of infections
-                tmpI(i) = find(rand <= cmfTmp, 1) + C(i) - 1; %check this line is OK- copied from find part from internet
+                tmpI(i) = find(rand <= cmfTmp, 1) + C(i) - 1; 
 
             end
 
