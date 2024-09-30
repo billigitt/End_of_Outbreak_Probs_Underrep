@@ -2,7 +2,7 @@
 % We consider a disease incidence time series dataset from an EVD outbreak that took place in Équateur Province, DRC, in 2018.
 % In total, 54 cases (40 confirmed cases and 14 probable cases) occurred between 5th April and 2nd June 2018. 
 % The Emergency Response Team (ERT) was deployed on 8th May 2018 and was withdrawn on 24th July 2018. 
-% The overall goal of our analysis is to determine the risk of withdrawing the ERT (i.e., the probability of future cases) at the beginning of each week following the deployment of the ERT
+% The overall goal of our analysis is to determine the risk of withdrawing the ERT (i.e., the probability of future cases) at the beginning of each week following the deployment of the ERT.
 % ------------
 
 % Cleaning
