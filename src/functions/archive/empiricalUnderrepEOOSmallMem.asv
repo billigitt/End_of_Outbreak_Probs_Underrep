@@ -1,7 +1,5 @@
-function output = empiricalUnderrepEOO(C_data, RpreERT, RERT, rho, w, ...
+function output = empiricalUnderrepEOOSmallMem(C_data, RpreERT, RERT, rho, w, ...
     numSamples, tERTArrival, tEndAnalysis, Tinf, experimentsPerSample)
-
-%Function to generate estimate of probability of future cases by simulation. Function inputs generally are understandable in context of paper. w is the serial interval, numSamples is the number of simulated epidemcis (underlying the C_data), and experimentsPerSample is the number of simulations going forward up to Tinf (to observe future cases) for each simulated peidemic. 
 
 C_1 = C_data(1);
 T = length(C_data);
@@ -30,15 +28,17 @@ for t = 2:tEndAnalysis
     waitbar((t-2)/(tEndAnalysis-1),f,sprintf("t = "+t+" (of "+2+" to "+tEndAnalysis+")"))
 
 
-    if (t > T)
+    if (t > (T+1))
 
         trueC_t = 0;
 
     else
 
-        trueC_t = C_data(t);
+        trueC_t = C_data(t-1);
 
     end
+
+    if (t ~= 2)
 
     numNewIs = 0;
     updatedIs = [];
@@ -56,30 +56,38 @@ for t = 2:tEndAnalysis
         numNewIs = numNewIs + sum(idxAccept);
 
     end
+    
+    updatedIs = updatedIs(:, 1:numSamples);
+    matrixI = updatedIs;%used in the case that we actually get more acceptances than we want
+    
+    else
 
-    matrixI = updatedIs(:, 1:numSamples); %used in the case that we actually get more acceptances than we want
-
-    cellOfMatrices{t} = matrixI;
-
-    experimentMatrixI = repmat(matrixI, 1, experimentsPerSample);
-
-    for tt = (t+1):Tinf
-
-        I_tt = renewalEqn(experimentMatrixI, w, RpreERT);
-        idx0s = (I_tt == 0);
-        experimentMatrixI = [experimentMatrixI(:, idx0s); I_tt(idx0s)]; %rejects simulations that do not give 0s, making computation more efficient
-
-        if (numel(experimentMatrixI) == 0)
-            
-            experimentsZeroFutureTrueCases = 0;
-
-            break
-
-        end
+        matrixI = I_1';
 
     end
 
-    experimentsZeroFutureTrueCases = size(experimentMatrixI, 2);
+    cellOfMatrices{t} = matrixI;
+
+    experimentsZeroFutureTrueCases = 0;
+
+
+    %Memory cheap way to empirically calculate probability of no more cases
+    for i = 1:experimentsPerSample
+
+        idxOfInterest = true(1, numSamples);
+
+        for tt = (t+1):Tinf
+
+            updatedIs = renewalEqn(matrixI, w((tt-t):end), RpreERT); %NB: Here we just shift the serial interval forward since the first values of w are just mutiplied by 0.
+            updatedIs(~idxOfInterest) = 1; %Make previously excluded ones incidence sets non-zero again.
+
+            idxOfInterest(updatedIs ~= 0) = 0;
+
+        end
+
+        experimentsZeroFutureTrueCases = sum(idxOfInterest) + experimentsZeroFutureTrueCases;
+
+    end
 
     propsOfZeros = experimentsZeroFutureTrueCases/(numSamples*experimentsPerSample);
 

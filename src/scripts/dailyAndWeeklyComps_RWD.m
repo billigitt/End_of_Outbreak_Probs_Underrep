@@ -2,13 +2,13 @@
 % We consider a disease incidence time series dataset from an EVD outbreak that took place in Équateur Province, DRC, in 2018.
 % In total, 54 cases (40 confirmed cases and 14 probable cases) occurred between 5th April and 2nd June 2018. 
 % The Emergency Response Team (ERT) was deployed on 8th May 2018 and was withdrawn on 24th July 2018. 
-% The overall goal of our analysis is to determine the risk of withdrawing the ERT (i.e., the probability of future cases) at the beginning of each week following the deployment of the ERT
+% The overall goal of our analysis is to determine the risk of withdrawing the ERT (i.e., the probability of future cases) at the beginning of each week following the deployment of the ERT.
 % ------------
 
-%% Cleaning
+% Cleaning
 clear all
 clc
-close all
+% close all
 
 %% Set figure specifications
 set(0,'DefaultFigureWindowStyle', 'normal') 
@@ -36,15 +36,11 @@ colourMat = [0.9 0.6 0;... %orange 1
     0.8 0.4 0;... %red 6
     0.4940 0.1840 0.5560]; % purple 7
 
+
+
 %% Make available required functions and package files
 addpath('../functions')
 addpath('../packages/mcmcstat-master') % use mcmcstat for geweke calculation
-
-%% -------------
-% Risk(t) as in this file are defined to be the probability of no more cases
-% after (and including) week t, given data (full weeks) from the first week to week
-% t-1.
-%% -------------
 
 %% Seed the random number generator
 rng(1)
@@ -55,7 +51,7 @@ rng(1)
 SI_mean_daily = 15.3;
 SI_sd_daily = 9.3;
 
-% Parameterise gamme distributed SI in terms of scale and shape parameters
+% Parameterise gamma distributed SI in terms of scale and shape parameters
 SI_scale_daily = SI_sd_daily^2/SI_mean_daily;
 SI_shape_daily = SI_mean_daily/SI_scale_daily;
 
@@ -73,7 +69,7 @@ wDaily(1) = wDaily(1) + (1-sum(wDaily));
 %% Weekly serial interval calc
 
 % Specify mean and standard deviation of gamma-distributed serial interval (SI)
-P = 7; % Conversion factor from days to weeks of 7 days
+P = 7;% Conversion factor from days to weeks of 7 days
 SI_mean_weekly = 15.3/P;
 SI_sd_weekly = 9.3/P;
 
@@ -139,10 +135,12 @@ incidenceBeforeERT = incidenceData(1:(idxERTDeployed-1));
 % Case reporting proportion parameter
 rho = 0.5;
 
+%% Generate FIG 1 - visulisation of the ERT withdrawl time schematic
+
 %rename incidenceData as CDaily
 CDaily = incidenceData;
 
-
+% Weekly case calc (summing from daily cases). Also generate schematic.
 %% Generate FIG 1 - visulisation of the ERT withdrawl time schematic
 
 % Weekly case calc (summing from daily cases).
@@ -185,10 +183,9 @@ title(" "+newline+" ")
 box off
 set(gcf,'Position',[100 100 1150 600])
 set(gcf, 'color', 'none')
-
 %% Calculate Rt posteriors (pre ERT and during ERT) (and using weekly and daily data)
 
-% Daily calculation - currently we do this such that we technically have more information for the daily inference than the weekly.
+% Daily calculation 
 CDailyPreERT = CDaily(4:(7*floor((idxERTDeployed-1)/7))); %4 because 4th index correponds to first case
 CDailyERT = CDaily(7*ceil(idxERTDeployed/7)+1:(idxERTWithdrawn-1));
 
@@ -281,7 +278,6 @@ for t = tERTArrivalWeekly:tEndAnalysisWeekly
 end
 
 %% Generate FIG S1 - Daily numbers of reported cases in the 2018 EVD outbreak in Équateur Province, DRC.
-
 days = [datetime(2018, 4, 2): caldays(1): datetime(2018, 10, 28)];
 weeks = [datetime(2018, 4, 2): caldays(7): datetime(2018, 10, 29)];
 
@@ -348,21 +344,23 @@ probGibbsSample = zeros(tEndAnalysisWeekly, GibbsSamples, length(rho));
 
 %UN-COMMENT FOLLOWING LINES WHEN COMPUTING P(T) CURVE AGAIN
 
-% for i = 1:length(rho)
-% 
-%     disp(i)
-%     output = GibbsApproach1Edit(CWeekly, wWeekly, rho(i), GibbsSamples, meanRBeforeERTWeekly, meanRDuringERTWeekly, ...
-%         tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
-% 
-%     probMoreCasesWithRho(:, i) = output(1).probMoreCases;
-%     probGibbsSample(:, :, i) = output(1).probGibbsSample;
-%     statGewekeRho(:, i) = output(1).pGeweke;
-% end
-% 
-% save('../mats/YOURFILENAME.mat') %set YOURFILENAME to fig3Gibbs1e5RhoNew
+for i = 1:length(rho)
+
+    disp(i)
+    output = GibbsApproach(CWeekly, wWeekly, rho(i), GibbsSamples, meanRBeforeERTWeekly, meanRDuringERTWeekly, ...
+        tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
+
+    probMoreCasesWithRho(:, i) = output(1).probMoreCases;
+    probGibbsSample(:, :, i) = output(1).probGibbsSample;
+    statGewekeRho(:, i) = output(1).pGeweke;
+end
+
+%%
+
+%save('../mats/fig3Gibbs1e5RhoNew.mat') %set YOURFILENAME to fig3Gibbs1e5RhoNew
 % or similar, and remove future loads.
 
-load('../mats/fig3Gibbs1e5RhoNew')
+%load('../mats/fig3Gibbs1e5RhoNew')
 
 % Burn-in with 10,000 did not initially work so we use burn-in = 20,000 and find Geweke tests are passed in all cases
 
@@ -440,7 +438,6 @@ xticklabels({'0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1'})
 
 
 %% Generate FIG S2 - Comparison of results from the Gibbs sampling method (as used in the main text) and an alternative approach involving repeated model simulation. 
-
 load('../mats/convergenceOfGibbs.mat')
 load('../mats/convergenceOfSims.mat')
 %

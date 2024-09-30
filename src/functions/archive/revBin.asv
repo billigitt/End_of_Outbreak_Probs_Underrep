@@ -1,7 +1,5 @@
 function I_1 = revBin(C_1, rho, numSamples)
 
-%Function to generate numSamples samples of the true incidence underlying the number of cases, given a reporting probability, rho.
-
 rangeI_1 = C_1:ceil(5*(1 + C_1)/rho);
 
 if C_1 == 0

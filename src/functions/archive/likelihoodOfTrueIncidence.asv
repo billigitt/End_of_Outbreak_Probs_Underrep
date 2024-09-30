@@ -1,12 +1,10 @@
 function likelihood = likelihoodOfTrueIncidence(I, C, w, RpreERT, RERT, rangeI, t, tERTDeployed, rho)
 
-%Function to calculate the log likelihood if the observed number of cases given the total incidence, using the likelihood described in the manuscript. This code is vectrised so that the likelihood over the entire range can be calculated together. Inputs are undertandable in context of manuscript, w is the serial interval, rangeI is the rnage of plausible true incidences considered in the domain of the PMF.
-
 lengthRangeI = length(rangeI);
 
 T = length(I);
 
-temporalR = [ones(tERTDeployed - 2, 1)*RpreERT; ones(T - tERTDeployed + 1, 1)*RERT]; %So only from tERTDeployed do we model the R_ERT value.
+temporalR = [ones(tERTDeployed - 2, 1)*RpreERT; ones(T - tERTDeployed + 1, 1)*RERT];
 temporalR = repmat(temporalR, 1, lengthRangeI);
 
 I2D = repmat(I(2:T), 1, lengthRangeI);
@@ -69,15 +67,21 @@ gamma = repmat(gamma, 1, lengthRangeI);
 gamma = gamma + perturbationMatrix;
 
 summand = I2D.*log(temporalR.*gamma);
-summand = summand + log(1-rho)*I2D;
+
+if rho ~= 1
+    summand = summand + log(1-rho)*I2D;
+end
+
 summand = summand - temporalR.*gamma; 
 summand = summand - log(factorial(I2D - C(2:T))); %this line could be sped-up if we expand logarithm part?
 
 if (t ~= 1)
 
 %     likelihood = sum(summand, 1) + factorial(I(1)) + I(1)*log(1-rho) + log(factorial(I(1) - C(1)));
-    loglikelihood = sum(summand, 1) + I(1)*log(1-rho);
-
+    loglikelihood = sum(summand, 1);
+    if rho < 1
+        loglikelihood  = loglikelihood + I(1)*log(1-rho);
+    end
     %not computing the factorial, and instead writing out the sum of the
     %logs makes rounding errors less likely. NB: in doing this, some of the
     %summations are cancelled out.
@@ -98,7 +102,12 @@ else
 
 %     likelihood = sum(summand, 1) + factorial(rangeI) + rangeI*log(1-rho) + log(factorial(rangeI - C(1)));
     logFactorialMatrix = log(hankel(1:C(1), rangeI)); %hankel matrix has k (which is used in summing) on the rows and along columns is teh different possible values of I_1
-    loglikelihood = sum(summand, 1) + rangeI*log(1-rho) +sum(logFactorialMatrix, 1);
+    loglikelihood = sum(summand, 1) +sum(logFactorialMatrix, 1);
+    if rho < 1
+
+        loglikelihood = loglikelihood + rangeI*log(1-rho);
+        
+    end
 
 end
 

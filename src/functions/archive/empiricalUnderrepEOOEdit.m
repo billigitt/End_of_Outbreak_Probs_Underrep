@@ -1,7 +1,5 @@
-function output = empiricalUnderrepEOO(C_data, RpreERT, RERT, rho, w, ...
+function riskWithdrawERT = empiricalUnderrepEOOEdit(C_data, RpreERT, RERT, rho, w, ...
     numSamples, tERTArrival, tEndAnalysis, Tinf, experimentsPerSample)
-
-%Function to generate estimate of probability of future cases by simulation. Function inputs generally are understandable in context of paper. w is the serial interval, numSamples is the number of simulated epidemcis (underlying the C_data), and experimentsPerSample is the number of simulations going forward up to Tinf (to observe future cases) for each simulated peidemic. 
 
 C_1 = C_data(1);
 T = length(C_data);
@@ -16,10 +14,6 @@ f = waitbar(0,'1','Name','Calculating risks (by simulation)...',...
 setappdata(f,'canceling',0);
 
 riskWithdrawERT = zeros(tEndAnalysis, 1);
-
-cellOfMatrices = cell(tEndAnalysis, 1);
-cellOfMatrices{1} = I_1;
-
 
 for t = 2:tEndAnalysis
 
@@ -48,9 +42,13 @@ for t = 2:tEndAnalysis
     while numNewIs < numSamples % could improve this loop so we do a larger batch of simulations on each run
 
         I_t = renewalEqn(matrixI, w, R); %outputs 1 X numSamples vector with possible values of I_t
-        C_t = binornd(I_t, rho*ones(1, numSamples));
 
-        idxAccept = (C_t == trueC_t);
+        I_tRevBin = revBin(trueC_t, rho, numSamples);
+
+        idxAccept = (I_t == I_tRevBin');
+%         C_t = binornd(I_t, rho*ones(1, numSamples));
+% 
+%         idxAccept = (C_t == trueC_t);
 
         updatedIs = [updatedIs [matrixI(:, idxAccept); I_t(idxAccept)]];
         numNewIs = numNewIs + sum(idxAccept);
@@ -58,8 +56,6 @@ for t = 2:tEndAnalysis
     end
 
     matrixI = updatedIs(:, 1:numSamples); %used in the case that we actually get more acceptances than we want
-
-    cellOfMatrices{t} = matrixI;
 
     experimentMatrixI = repmat(matrixI, 1, experimentsPerSample);
 
@@ -89,7 +85,5 @@ end
 
 delete(f)
 
-
-output = struct('riskWithdrawERT', riskWithdrawERT, 'cellOfMatrices', cellOfMatrices);
 
 end

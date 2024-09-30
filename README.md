@@ -38,3 +38,4 @@ Code for the analysis to all figures can be found in this file given above, othe
 For validation of the inference method outputs, a numerical simulation to estimate of end of outbreak probability in the presence of underreporting.
 
 #### tests
+Scripts for validation of the inference method outputs, and checks of fundamental functions and methods, e.g. testRevBin.m checks the way that we calculate the distribution of trials given x successes with probability of success p.
