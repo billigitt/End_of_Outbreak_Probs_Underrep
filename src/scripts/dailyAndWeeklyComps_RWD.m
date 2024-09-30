@@ -344,23 +344,23 @@ probGibbsSample = zeros(tEndAnalysisWeekly, GibbsSamples, length(rho));
 
 %UN-COMMENT FOLLOWING LINES WHEN COMPUTING P(T) CURVE AGAIN
 
-for i = 1:length(rho)
-
-    disp(i)
-    output = GibbsApproach(CWeekly, wWeekly, rho(i), GibbsSamples, meanRBeforeERTWeekly, meanRDuringERTWeekly, ...
-        tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
-
-    probMoreCasesWithRho(:, i) = output(1).probMoreCases;
-    probGibbsSample(:, :, i) = output(1).probGibbsSample;
-    statGewekeRho(:, i) = output(1).pGeweke;
-end
+% for i = 1:length(rho)
+% 
+%     disp(i)
+%     output = GibbsApproach(CWeekly, wWeekly, rho(i), GibbsSamples, meanRBeforeERTWeekly, meanRDuringERTWeekly, ...
+%         tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
+% 
+%     probMoreCasesWithRho(:, i) = output(1).probMoreCases;
+%     probGibbsSample(:, :, i) = output(1).probGibbsSample;
+%     statGewekeRho(:, i) = output(1).pGeweke;
+% end
 
 %%
 
 %save('../mats/fig3Gibbs1e5RhoNew.mat') %set YOURFILENAME to fig3Gibbs1e5RhoNew
 % or similar, and remove future loads.
 
-%load('../mats/fig3Gibbs1e5RhoNew')
+load('../mats/fig3Gibbs1e5RhoNew')
 
 % Burn-in with 10,000 did not initially work so we use burn-in = 20,000 and find Geweke tests are passed in all cases
 
