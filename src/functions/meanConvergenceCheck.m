@@ -96,7 +96,7 @@ thinning = 10;
 
 for i = 1:length(rhoAssumed)
 
-    outputGibbs = GibbsApproach([C; zeros(tEndCalc-T, 1)], SI_discrete, rhoAssumed(i), GibbsSamples, RpreERT, RERT, tERTArrival, tEndCalc, burnin, thinning);
+    outputGibbs = GibbsApproach1Edit([C; zeros(tEndCalc-T, 1)], SI_discrete, rhoAssumed(i), GibbsSamples, RpreERT, RERT, tERTArrival, tEndCalc, burnin, thinning);
 
     probFutureCases = outputGibbs.probMoreCases;
 
