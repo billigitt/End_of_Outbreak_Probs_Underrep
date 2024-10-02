@@ -10,6 +10,7 @@ clear all
 clc
 % close all
 
+%% Set figure specifications
 set(0,'DefaultFigureWindowStyle', 'normal') 
 set(0,'DefaultTextInterpreter', 'none')
 set(0,'defaultAxesTickLabelInterpreter','none')
@@ -44,7 +45,7 @@ addpath('../packages/mcmcstat-master') % use mcmcstat for geweke calculation
 %% Seed the random number generator
 rng(1)
 
-% Daily serial interval calc
+%% Daily serial interval calc
 
 % Specify mean and standard deviation of gamma-distributed serial interval (SI)
 SI_mean_daily = 15.3;
@@ -126,16 +127,16 @@ incidenceData(idx6s') = 6;
 % Set up array entry access values corresponding to ERT periods
 idxERTDeployed = datenum([2018 5 8]) - 737151;
 idxERTWithdrawn = datenum([2018 7 24]) - 737151;
+ERTPeriod = idxERTWithdrawn - idxERTDeployed; % Specify length of ERT period
 
 % Assign incidence for time period before ERT was deployed to vector
 incidenceBeforeERT = incidenceData(1:(idxERTDeployed-1));
 
-ERTPeriod = idxERTWithdrawn - idxERTDeployed;
-
-idxRiskPlotEnd = datenum([2018 9 15]) - 737151;
-
 % Case reporting proportion parameter
 rho = 0.5;
+
+%% Generate FIG 1 - visulisation of the ERT withdrawl time schematic
+
 %rename incidenceData as CDaily
 CDaily = incidenceData;
 
@@ -158,7 +159,6 @@ xtickangle(45)
 bar(weeks(1:18), CWeekly(1:18), 'BarWidth',1, 'LineStyle','none')
 
 text(datetime(2018, 6, 15), 22, "Actual ERT period", 'HorizontalAlignment','center', 'Color','r', 'FontSize',25, 'FontName','aakar')
-% text(datetime(2018, 7, 24), 22, "ERT"+newline+"withdrawal date", 'HorizontalAlignment','center', 'Color','r', 'FontSize', 20)
 text(datetime(2018, 6, 30), 12, "Withdraw ERT?", 'Color', 'k', 'HorizontalAlignment','center', 'FontSize',25, 'FontName','aakar')
 ylim([0 20])
 
@@ -174,8 +174,6 @@ end
 % Specify axis labels 
 ylabel('Weekly reported cases')
 xlabel('Date (dd/mm)')
-
-
 
 ax = gca;
 labels = string(ax.XAxis.TickLabels); % extract
@@ -202,9 +200,9 @@ rateDuringERT = gamma_tMostBasic(incidenceData(1:(idxERTWithdrawn-1)), wDaily, i
 scaleDuringERT = 1/rateDuringERT;
 meanRDuringERTDaily = shapeDuringERT*scaleDuringERT;
 
-%% Weekly R calculation
+% Weekly R calculation
 %idxERTDeployed = 37, and so since 37/7 = 5.29, weeks 1 to 5 are pre-ERT,
-%and weeks 7 onwards are during ERT. Week 6is a hybrid week so cannot be
+%and weeks 7 onwards are during ERT. Week 6 is a hybrid week so cannot be
 %deemed either. idxERTWithdrawn/7 = 16.29 and so we only infer R from weeks
 %7 to 16 for during ERT.
 CWeeklyPreERT = CWeekly(1:5);
@@ -224,12 +222,12 @@ meanRDuringERTWeekly = shapeDuringERT*scaleDuringERT;
 %% Calculate EOO with daily data (using end pts + daily SI)
 
 TinfDaily = 7*30;
-tEndAnalysis = 7*30 + 1; %The +1 means that you estimate the probability of 0s from the next day after
-% a full week, which will be comparable to weekly data
+tEndAnalysis = 7*30 + 1; 
+    % The +1 means that you estimate the probability of 0s from the next day after
+    % a full week, which will be comparable to weekly data
 
 gammaDailyCalc = zeros(tEndAnalysis, 1);
 riskDailyCalc = gammaDailyCalc;
-
 
 for t = (7*ceil(idxERTDeployed/7)+1):tEndAnalysis %Starting at day 43.
 
@@ -248,7 +246,7 @@ for t = (7*ceil(idxERTDeployed/7)+1):tEndAnalysis %Starting at day 43.
 
 end
 
- % we want all contributions to be mod 1
+% we want all contributions to be mod 1
 % as these will be the ones that use the data from the  full week
 
 %% Calculate EOO with weekly data (using weekly SI)
@@ -282,6 +280,7 @@ end
 %% Generate FIG S1 - Daily numbers of reported cases in the 2018 EVD outbreak in Équateur Province, DRC.
 days = [datetime(2018, 4, 2): caldays(1): datetime(2018, 10, 28)];
 weeks = [datetime(2018, 4, 2): caldays(7): datetime(2018, 10, 29)];
+
 figure
 bar(days(1:65), CDaily(1:65), 'LineStyle', 'none', 'BarWidth', 1)
 xtickformat('dd/MM')
@@ -345,23 +344,23 @@ probGibbsSample = zeros(tEndAnalysisWeekly, GibbsSamples, length(rho));
 
 %UN-COMMENT FOLLOWING LINES WHEN COMPUTING P(T) CURVE AGAIN
 
-for i = 1:length(rho)
-
-    disp(i)
-    output = GibbsApproach(CWeekly, wWeekly, rho(i), GibbsSamples, meanRBeforeERTWeekly, meanRDuringERTWeekly, ...
-        tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
-
-    probMoreCasesWithRho(:, i) = output(1).probMoreCases;
-    probGibbsSample(:, :, i) = output(1).probGibbsSample;
-    statGewekeRho(:, i) = output(1).pGeweke;
-end
+% for i = 1:length(rho)
+% 
+%     disp(i)
+%     output = GibbsApproach(CWeekly, wWeekly, rho(i), GibbsSamples, meanRBeforeERTWeekly, meanRDuringERTWeekly, ...
+%         tERTArrivalWeekly, tEndAnalysisWeekly, burnin, thinning);
+% 
+%     probMoreCasesWithRho(:, i) = output(1).probMoreCases;
+%     probGibbsSample(:, :, i) = output(1).probGibbsSample;
+%     statGewekeRho(:, i) = output(1).pGeweke;
+% end
 
 %%
 
 %save('../mats/fig3Gibbs1e5RhoNew.mat') %set YOURFILENAME to fig3Gibbs1e5RhoNew
 % or similar, and remove future loads.
 
-%load('../mats/fig3Gibbs1e5RhoNew')
+load('../mats/fig3Gibbs1e5RhoNew')
 
 % Burn-in with 10,000 did not initially work so we use burn-in = 20,000 and find Geweke tests are passed in all cases
 
@@ -390,9 +389,6 @@ end
 %% Generate FIG 3 - Estimated probability of future cases accounting for case under-reporting.
 
 weekSafe = zeros(8, 1);
-
-
-%%% FIG 3
 
 figure
 subplot(1, 2, 1)
@@ -441,7 +437,7 @@ xticks(0.3:0.1:1)
 xticklabels({'0.3', '0.4', '0.5', '0.6', '0.7', '0.8', '0.9', '1'})
 
 
-%% Generate FIG 3 - Estimated probability of future cases accounting for case under-reporting.
+%% Generate FIG S2 - Comparison of results from the Gibbs sampling method (as used in the main text) and an alternative approach involving repeated model simulation. 
 load('../mats/convergenceOfGibbs.mat')
 load('../mats/convergenceOfSims.mat')
 %

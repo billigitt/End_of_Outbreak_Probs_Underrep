@@ -34,7 +34,8 @@ Our analysis makes use of the [mcmcstat package](https://github.com/mjlaine/mcmc
 Script for reproducing figures 1, 2, 3, 4, S1 and S2. 
 Code for the analysis to all figures can be found in this file given above, other than figure S1, which can be found in "src/tests/convergenceOfSuperSimpleSyntheticExample.m". Note that this file may take several hours to run, if 'simSamples' variable is large (i.e. 200,000 as in the manuscript). To run the analysis for generating figures 3 and 4 (where the Gibbs-sampling method was used), you must un-comment lines 312-321.
 
+ - **testingEmpirical_UnderrepEOO**  
+For validation of the inference method outputs, a numerical simulation to estimate of end of outbreak probability in the presence of underreporting.
 
 #### tests
-
 Scripts for validation of the inference method outputs, and checks of fundamental functions and methods, e.g. testRevBin.m checks the way that we calculate the distribution of trials given x successes with probability of success p.
